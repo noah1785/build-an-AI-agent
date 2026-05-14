@@ -4,6 +4,7 @@ from google import genai
 import argparse
 from google.genai import types
 from prompts import *
+from functions.call_function import *
 
 
 def main():
@@ -34,7 +35,7 @@ def main():
     response = client.models.generate_content(
     model="gemini-2.5-flash", 
     contents=messages,
-    config=types.GenerateContentConfig(system_instruction=system_prompt, temperature=0),
+    config=types.GenerateContentConfig(tools=[available_functions], system_instruction=system_prompt, temperature=0),
 )
     
     if response.usage_metadata == None:
@@ -50,19 +51,27 @@ def main():
 
     #     print(prompt_tokens)
     #     print(response_tokens)
-        if content:
-            display_user_prompt = f"User prompt: {args.user_prompt}"
-            prompt_tokens_str = f"Prompt tokens: {prompt_tokens}"
-            response_tokens_str = f"Response tokens: {response_tokens}"
 
-            print(display_user_prompt)
-            print(prompt_tokens_str)
-            print(response_tokens_str)
-            print(response.text)
+        if response.function_calls:
+
+            for function_call in response.function_calls:
+                print(f"Calling function: {function_call.name}({function_call.args})")
 
         else:
-            
-            print(response.text)
+
+            if content:
+                display_user_prompt = f"User prompt: {args.user_prompt}"
+                prompt_tokens_str = f"Prompt tokens: {prompt_tokens}"
+                response_tokens_str = f"Response tokens: {response_tokens}"
+
+                print(display_user_prompt)
+                print(prompt_tokens_str)
+                print(response_tokens_str)
+                print(response.text)
+
+            else:
+                
+                print(response.text)
     # print(response.text)
 
 
